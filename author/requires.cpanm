@@ -1,0 +1,14 @@
+# for Cache-Redis
+
+# author's tests
+Test::Pod
+Test::Pod::Coverage
+Test::Spelling
+Test::Perl::Critic
+Test::Synopsis
+
+# Release tools
+Software::License
+ShipIt
+ShipIt::Step::ChangeAllVersions
+CPAN::Uploader
