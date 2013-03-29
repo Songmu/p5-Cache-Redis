@@ -12,6 +12,9 @@ my $build = Module::Build->new(
         'Test::Requires' => '0.06',
     },
     configure_requires => { 'Module::Build' => '0.38' },
+    test_requires      => {
+        'Test::RedisServer' => '0',
+    },
     requires           => {
         perl         => '5.008001',
         'Redis'             => '0',
