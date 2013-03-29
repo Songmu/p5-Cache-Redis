@@ -5,7 +5,7 @@ use Module::Build;
 my $build = Module::Build->new(
     license        => 'perl',
     dynamic_config => 0,
-    # dist_abstract  => 'XXX',
+    dist_abstract  => 'Redis client specialized for cache',
 
     build_requires     => {
         'Test::More'     => '0.98',
@@ -14,6 +14,8 @@ my $build = Module::Build->new(
     configure_requires => { 'Module::Build' => '0.38' },
     requires           => {
         perl         => '5.008001',
+        'Redis'             => '0',
+        'Data::MessagePack' => '0.36',
         # 'parent'     => 0,
     },
 
