@@ -5,6 +5,75 @@ use warnings;
 
 our $VERSION = '0.01';
 
+use Redis;
+
+my $_mp;
+sub _mp {
+    $_mp ||= do {
+        require Data::MessagePack;
+        Data::MessagePack->new->utf8;
+    };
+}
+sub _serialize {
+    _mp->pack(@_);
+}
+sub _deserialize {
+    _mp->unpack(@_);
+}
+
+sub new {
+    my $class = shift;
+
+    my $args = @_ == 1 ? $_[0] : {@_};
+    my $default_ttl = delete $args->{default_ttl} || 60*60*24 * 120;
+
+    my ($serialize, $deserialize, $redis);
+    my $serialize_methods = delete $args->{serialize_methods};
+    if ($serialize_methods) {
+        $serialize   = $serialize_methods->[0];
+        $deserialize = $serialize_methods->[1];
+    }
+    else {
+        $serialize   = \&_serialize;
+        $deserialize = \&_deserialize;
+    }
+    $redis = Redis->new(
+        encoding => undef,
+        %$args
+    );
+
+    bless {
+        default_ttl => $default_ttl,
+        serialize   => $serialize,
+        deserialize => $deserialize,
+        redis       => $redis,
+    }, $class;
+}
+
+sub get {
+    my ($self, $key) = @_;
+
+    my $data = $self->{redis}->get($key);
+
+    defined $data ? $self->{deserialize}->($data) : $data;
+}
+
+sub set {
+    my ($self, $key, $value, $expire) = @_;
+    $expire ||= $self->{default_ttl};
+
+    $self->{redis}->set($key, $self->{serialize}->($value), sub {});
+    $self->{redis}->expire($key, $expire, sub {});
+
+    $self->{redis}->wait_all_responses;
+    1;
+}
+
+sub remove {
+    my ($self, $key) = @_;
+
+    $self->{redis}->del($key);
+}
 
 1;
 __END__
