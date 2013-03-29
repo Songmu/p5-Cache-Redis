@@ -22,7 +22,7 @@ subtest serialize => sub {
 
 subtest get_and_set => sub {
     ok !$cache->get('hoge');
-    ok $cache->set('hoge',  'fuga');
+    $cache->set('hoge',  'fuga');
     is $cache->get('hoge'), 'fuga';
 
     ok $cache->remove('hoge');
@@ -31,7 +31,7 @@ subtest get_and_set => sub {
 
 subtest multi_byte => sub {
     ok !$cache->get('hoge');
-    ok $cache->set('hoge',  'あ');
+    $cache->set('hoge',  'あ');
     is $cache->get('hoge'), 'あ';
 
     ok $cache->remove('hoge');

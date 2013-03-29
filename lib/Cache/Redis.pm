@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 our $VERSION = '0.01';
-
 use Redis;
 
 my $_mp;
@@ -26,6 +25,7 @@ sub new {
 
     my $args = @_ == 1 ? $_[0] : {@_};
     my $default_ttl = delete $args->{default_ttl} || 60*60*24 * 120;
+    my $namespace   = delete $args->{namespace}   || '';
 
     my ($serialize, $deserialize, $redis);
     my $serialize_methods = delete $args->{serialize_methods};
@@ -47,11 +47,13 @@ sub new {
         serialize   => $serialize,
         deserialize => $deserialize,
         redis       => $redis,
+        namespace   => $namespace,
     }, $class;
 }
 
 sub get {
     my ($self, $key) = @_;
+    $key = $self->{namespace} . $key;
 
     my $data = $self->{redis}->get($key);
 
@@ -60,13 +62,13 @@ sub get {
 
 sub set {
     my ($self, $key, $value, $expire) = @_;
+    $key = $self->{namespace} . $key;
     $expire ||= $self->{default_ttl};
 
     $self->{redis}->set($key, $self->{serialize}->($value), sub {});
     $self->{redis}->expire($key, $expire, sub {});
 
     $self->{redis}->wait_all_responses;
-    1;
 }
 
 sub remove {
