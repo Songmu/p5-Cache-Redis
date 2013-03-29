@@ -23,6 +23,9 @@ subtest get_and_set => sub {
     ok !$cache->get('hoge');
     ok $cache->set('hoge',  'fuga');
     is $cache->get('hoge'), 'fuga';
+
+    ok $cache->remove('hoge');
+    ok !$cache->get('hoge');
 };
 
 done_testing;
