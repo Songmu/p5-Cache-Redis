@@ -26,6 +26,7 @@ sub new {
     my $args = @_ == 1 ? $_[0] : {@_};
     my $default_ttl = delete $args->{default_ttl} || 60*60*24 * 120;
     my $namespace   = delete $args->{namespace}   || '';
+    my $nowait      = delete $args->{nowait}      || 0;
 
     my ($serialize, $deserialize, $redis);
     my $serialize_methods = delete $args->{serialize_methods};
@@ -48,6 +49,7 @@ sub new {
         deserialize => $deserialize,
         redis       => $redis,
         namespace   => $namespace,
+        nowait      => $nowait,
     }, $class;
 }
 
@@ -65,16 +67,21 @@ sub set {
     $key = $self->{namespace} . $key;
     $expire ||= $self->{default_ttl};
 
-    $self->{redis}->set($key, $self->{serialize}->($value), sub {});
-    $self->{redis}->expire($key, $expire, sub {});
+    my $redis = $self->{redis};
+    $redis->set($key, $self->{serialize}->($value), sub {});
+    $redis->expire($key, $expire, sub {});
 
-    $self->{redis}->wait_all_responses;
+    $redis->wait_all_responses unless $self->{nowait};
 }
 
 sub remove {
     my ($self, $key) = @_;
 
     $self->{redis}->del($key);
+}
+
+sub nowait_push {
+    shift->{redis}->wait_all_responses;
 }
 
 1;
