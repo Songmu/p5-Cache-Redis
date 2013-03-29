@@ -74,6 +74,17 @@ sub set {
     $redis->wait_all_responses unless $self->{nowait};
 }
 
+sub get_or_set {
+    my ($self, $key, $code, $expire) = @_;
+
+    my $data = $self->get($key);
+    unless (defined $data) {
+        $data = $code->();
+        $self->set($key, $data, $expire);
+    }
+    $data;
+}
+
 sub remove {
     my ($self, $key) = @_;
 

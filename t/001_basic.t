@@ -38,4 +38,12 @@ subtest multi_byte => sub {
     ok !$cache->get('hoge');
 };
 
+subtest get_or_set => sub {
+    my $key = 'kkk';
+
+    ok !$cache->get($key);
+    is $cache->get_or_set($key => sub {10}), 10;
+    is $cache->get($key), 10;
+};
+
 done_testing;
