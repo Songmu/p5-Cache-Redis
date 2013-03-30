@@ -24,9 +24,9 @@ sub new {
     my $class = shift;
 
     my $args = @_ == 1 ? $_[0] : {@_};
-    my $default_ttl = delete $args->{default_ttl} || 60*60*24 * 120;
-    my $namespace   = delete $args->{namespace}   || '';
-    my $nowait      = delete $args->{nowait}      || 0;
+    my $default_expires_in = delete $args->{default_expires_in} || 60*60*24 * 30;
+    my $namespace          = delete $args->{namespace}          || '';
+    my $nowait             = delete $args->{nowait}             || 0;
 
     my ($serialize, $deserialize, $redis);
     my $serialize_methods = delete $args->{serialize_methods};
@@ -44,12 +44,12 @@ sub new {
     );
 
     bless {
-        default_ttl => $default_ttl,
-        serialize   => $serialize,
-        deserialize => $deserialize,
-        redis       => $redis,
-        namespace   => $namespace,
-        nowait      => $nowait,
+        default_expires_in => $default_expires_in,
+        serialize          => $serialize,
+        deserialize        => $deserialize,
+        redis              => $redis,
+        namespace          => $namespace,
+        nowait             => $nowait,
     }, $class;
 }
 
@@ -65,7 +65,7 @@ sub get {
 sub set {
     my ($self, $key, $value, $expire) = @_;
     $key = $self->{namespace} . $key;
-    $expire ||= $self->{default_ttl};
+    $expire ||= $self->{default_expires_in};
 
     my $redis = $self->{redis};
     $redis->set($key, $self->{serialize}->($value), sub {});

@@ -20,7 +20,7 @@ subtest serialize => sub {
     is $unpacked, $org;
 };
 
-subtest get_and_set => sub {
+subtest basic => sub {
     ok !$cache->get('hoge');
     $cache->set('hoge',  'fuga');
     is $cache->get('hoge'), 'fuga';
