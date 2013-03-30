@@ -38,12 +38,30 @@ subtest multi_byte => sub {
     ok !$cache->get('hoge');
 };
 
+subtest object => sub {
+    ok !$cache->get('hoge');
+    $cache->set('hoge', {data => 'あ'});
+    is_deeply $cache->get('hoge'), {data => 'あ'};
+
+    ok $cache->remove('hoge');
+    ok !$cache->get('hoge');
+};
+
 subtest get_or_set => sub {
     my $key = 'kkk';
 
     ok !$cache->get($key);
     is $cache->get_or_set($key => sub {10}), 10;
     is $cache->get($key), 10;
+};
+
+subtest expire => sub {
+    ok !$cache->get('hoge');
+    $cache->set('hoge',  'fuga', 1);
+    is $cache->get('hoge'), 'fuga';
+
+    sleep 2;
+    ok !$cache->get('hoge');
 };
 
 done_testing;
