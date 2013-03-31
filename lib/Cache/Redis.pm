@@ -216,7 +216,7 @@ Wait all response from redis. This is intended for C<< $obj->nowait >>.
 =head2 How to set binary or blessed object to cache?
 
 Default serializer using L<Data::MessagePack> can't handle binary
-and blessed objects.
+and blessed objects (for performance).
 
 If you want to set them. Most easiest way is to set constructor option
 `serializer` to 'Storable'.
