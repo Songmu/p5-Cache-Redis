@@ -20,6 +20,12 @@ __DATA__
 Masayuki Matsuki
 y.songmu@gmail.com
 Cache::Redis
+MessagePack
+Serializer
+Storable
+backend
+deserialization
+redis
 
 # computer terms
 API

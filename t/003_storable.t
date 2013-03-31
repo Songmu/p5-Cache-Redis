@@ -61,13 +61,4 @@ subtest get_or_set => sub {
     is $cache->get($key), 10;
 };
 
-subtest expire => sub {
-    ok !$cache->get('hoge');
-    $cache->set('hoge',  'fuga', 1);
-    is $cache->get('hoge'), 'fuga';
-
-    sleep 1.01;
-    ok !$cache->get('hoge');
-};
-
 done_testing;

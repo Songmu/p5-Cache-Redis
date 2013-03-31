@@ -129,27 +129,99 @@ __END__
 
 =head1 NAME
 
-Cache::Redis - Perl extention to do something
-
-=head1 VERSION
-
-This document describes Cache::Redis version 0.01.
+Cache::Redis - Redis client specialized for cache
 
 =head1 SYNOPSIS
 
     use Cache::Redis;
 
+    my $cache = Cache::Redis->new(
+        server    => 'localhost:9999',
+        namespace => 'cache:',
+    );
+    $cache->set('key', 'val');
+    my $val = $cache->get('key');
+    $cache->remove('key');
+
+
 =head1 DESCRIPTION
 
-# TODO
+This module is for cache of Redis backend having L<<Cache::Cache>> like interface.
 
 =head1 INTERFACE
 
-=head2 Functions
+=head2 Methods
 
-=head3 C<< hello() >>
+=head3 C<< my $obj = Cache::Redis->new(%options) >>
 
-# TODO
+Create a new cache object. Various options may be set in C<%options>, which affect
+the behaviour of the cache (defaults in parentheses):
+
+=over
+
+=item C<default_expires_in (60*60*24 * 30)>
+
+The default expiration seconds for objects place in the cache.
+
+=item C<namespace ('')>
+
+The namespace associated with this cache.
+
+=item C<nowait (0)>
+
+If enabled, when you call a method that only returns its success status (like "set"), in a void context,
+it sends the request to the server and returns immediately, not waiting the reply. This avoids the
+round-trip latency at a cost of uncertain command outcome.
+
+=item C<serializer ('MessagePack')>
+
+Serializer. 'MessagePack' and 'Storable' are usable. if `serialize_methods` option
+is specified, this option is ignored.
+
+=item C<serialize_methods (undef)>
+
+The value is a reference to an array holding two code references for serialization and
+deserialization routines respectively.
+
+=item server (undef)
+
+Redis server information. You can use `sock` option instead of this and can specify
+all other L<Redis> constructor options to C<< Cache::Cache->new >> method.
+
+=back
+
+=head3 C<< $obj->set($key, $value, $expire) >>
+
+Set a stuff to cache.
+
+=head3 C<< my $stuff = $obj->get($key) >>
+
+Get a stuff from cache.
+
+=head3 C<< $obj->remove($key) >>
+
+Remove stuff of key from cache.
+
+=head3 C<< $obj->get_or_set($key, $code, $expire) >>
+
+Get a cache value for I<$key> if it's already cached. If it's not cached then,
+run I<$code> and cache I<$expiration> seconds and return the value.
+
+=head3 C<< $obj->nowait_push >>
+
+Wait all response from redis. This is intended for C<< $obj->nowait >>.
+
+=head1 FAQ
+
+=head2 How to set binary or blessed object to cache?
+
+Default serializer using L<Data::MessagePack> can't handle binary
+and blessed objects.
+
+If you want to set them. Most easiest way is to set constructor option
+`serializer` to 'Storable'.
+
+Or you can set constructor option `serialize_methods` for more frequency handling.
 
 =head1 DEPENDENCIES
 
