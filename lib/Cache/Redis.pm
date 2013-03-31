@@ -13,11 +13,26 @@ sub _mp {
         Data::MessagePack->new->utf8;
     };
 }
-sub _serialize {
+sub _mp_serialize {
     _mp->pack(@_);
 }
-sub _deserialize {
+sub _mp_deserialize {
     _mp->unpack(@_);
+}
+
+sub _do_serialize {
+    my ($self, $data) = @_;
+
+    my $flags; # for future extention
+    my $store_date = [$data, $flags];
+    $self->{serialize}->($store_date);
+}
+
+sub _do_deserialize {
+    my ($self, $data) = @_;
+
+    my ($org, $flags) = @{$self->{deserialize}->($data)};
+    $org;
 }
 
 sub new {
@@ -27,6 +42,7 @@ sub new {
     my $default_expires_in = delete $args->{default_expires_in} || 60*60*24 * 30;
     my $namespace          = delete $args->{namespace}          || '';
     my $nowait             = delete $args->{nowait}             || 0;
+    my $serializer         = delete $args->{serializer}         || 'Storable';
 
     my ($serialize, $deserialize, $redis);
     my $serialize_methods = delete $args->{serialize_methods};
@@ -34,9 +50,16 @@ sub new {
         $serialize   = $serialize_methods->[0];
         $deserialize = $serialize_methods->[1];
     }
-    else {
-        $serialize   = \&_serialize;
-        $deserialize = \&_deserialize;
+    elsif ($serializer) {
+        if ($serializer eq 'Storable') {
+            require Storable;
+            $serialize   = \&Storable::nfreeze;
+            $deserialize = \&Storable::thaw;
+        }
+        elsif ($serializer eq 'MessagePack') {
+            $serialize   = \&_mp_serialize;
+            $deserialize = \&_mp_deserialize;
+        }
     }
     $redis = Redis->new(
         encoding => undef,
@@ -59,7 +82,7 @@ sub get {
 
     my $data = $self->{redis}->get($key);
 
-    defined $data ? $self->{deserialize}->($data) : $data;
+    defined $data ? $self->_do_deserialize($data) : $data;
 }
 
 sub set {
@@ -68,7 +91,7 @@ sub set {
     $expire ||= $self->{default_expires_in};
 
     my $redis = $self->{redis};
-    $redis->set($key, $self->{serialize}->($value), sub {});
+    $redis->set($key, $self->_do_serialize($value), sub {});
     $redis->expire($key, $expire, sub {});
 
     $redis->wait_all_responses unless $self->{nowait};
