@@ -1,16 +1,17 @@
 Build.PL
 Changes
 lib/Cache/Redis.pm
+LICENSE
 MANIFEST			This list of files
+META.json
+META.yml
 README
 t/000_load.t
 t/001_basic.t
 t/002_namespace.t
+t/003_storable.t
 xt/perlcritic.t
 xt/pod.t
 xt/podcoverage.t
 xt/podspell.t
 xt/podsynopsis.t
-LICENSE
-META.yml
-META.json

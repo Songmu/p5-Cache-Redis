@@ -1,5 +1,4 @@
 Revision history for Perl extension Cache::Redis
 
-NEXT <<SET RELEASE DATE HERE>>
-    - original version; created by dim
-      at Thu Mar 28 21:11:42 2013.
+0.01    Sun Mar 31 16:34:33 2013
+    - original version
