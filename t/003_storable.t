@@ -3,6 +3,7 @@ use strict;
 use utf8;
 use Test::More;
 
+use Time::HiRes qw/sleep/;
 use Test::RedisServer;
 use Cache::Redis;
 
@@ -11,16 +12,9 @@ my $socket = $redis->conf->{unixsocket};
 
 my $cache = Cache::Redis->new(
     sock       => $socket,
-    serializer => 'MessagePack',
+    serializer => 'Storable',
 );
 isa_ok $cache, 'Cache::Redis';
-
-subtest serialize => sub {
-    my $org = 'hoge';
-    my $packed   = Cache::Redis::_mp_serialize($org);
-    my $unpacked = Cache::Redis::_mp_deserialize($packed);
-    is $unpacked, $org;
-};
 
 subtest basic => sub {
     ok !$cache->get('hoge');
@@ -50,12 +44,13 @@ subtest object => sub {
 };
 
 subtest blessed => sub {
-    local $@;
-    my $obj = bless {}, 'Blah';
-    eval {
-        $cache->set('hoge', $obj);
-    };
-    ok $@;
+    $cache->set('hoge', bless({}, 'Blah'));
+
+    my $obj = $cache->get('hoge');
+    isa_ok $obj, 'Blah';
+
+    ok $cache->remove('hoge');
+    ok !$cache->get('hoge');
 };
 
 subtest get_or_set => sub {
@@ -64,6 +59,15 @@ subtest get_or_set => sub {
     ok !$cache->get($key);
     is $cache->get_or_set($key => sub {10}), 10;
     is $cache->get($key), 10;
+};
+
+subtest expire => sub {
+    ok !$cache->get('hoge');
+    $cache->set('hoge',  'fuga', 1);
+    is $cache->get('hoge'), 'fuga';
+
+    sleep 1.01;
+    ok !$cache->get('hoge');
 };
 
 done_testing;

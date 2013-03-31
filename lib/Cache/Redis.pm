@@ -8,10 +8,7 @@ use Redis;
 
 my $_mp;
 sub _mp {
-    $_mp ||= do {
-        require Data::MessagePack;
-        Data::MessagePack->new->utf8;
-    };
+    $_mp ||= Data::MessagePack->new->utf8;
 }
 sub _mp_serialize {
     _mp->pack(@_);
@@ -20,19 +17,27 @@ sub _mp_deserialize {
     _mp->unpack(@_);
 }
 
-sub _do_serialize {
-    my ($self, $data) = @_;
+sub _mk_serialize {
+    my $code = shift;
 
-    my $flags; # for future extention
-    my $store_date = [$data, $flags];
-    $self->{serialize}->($store_date);
+    return sub {
+        my $data = shift;
+
+        my $flags; # for future extention
+        my $store_date = [$data, $flags];
+        $code->($store_date);
+    };
 }
 
-sub _do_deserialize {
-    my ($self, $data) = @_;
+sub _mk_deserialize {
+    my $code = shift;
 
-    my ($org, $flags) = @{$self->{deserialize}->($data)};
-    $org;
+    return sub {
+        my $data = shift;
+
+        my ($org, $flags) = @{$code->($data)};
+        $org;
+    };
 }
 
 sub new {
@@ -42,23 +47,24 @@ sub new {
     my $default_expires_in = delete $args->{default_expires_in} || 60*60*24 * 30;
     my $namespace          = delete $args->{namespace}          || '';
     my $nowait             = delete $args->{nowait}             || 0;
-    my $serializer         = delete $args->{serializer}         || 'Storable';
+    my $serializer         = delete $args->{serializer}         || 'MessagePack';
 
     my ($serialize, $deserialize, $redis);
     my $serialize_methods = delete $args->{serialize_methods};
     if ($serialize_methods) {
-        $serialize   = $serialize_methods->[0];
-        $deserialize = $serialize_methods->[1];
+        $serialize   = _mk_serialize   $serialize_methods->[0];
+        $deserialize = _mk_deserialize $serialize_methods->[1];
     }
     elsif ($serializer) {
-        if ($serializer eq 'Storable') {
-            require Storable;
-            $serialize   = \&Storable::nfreeze;
-            $deserialize = \&Storable::thaw;
-        }
-        elsif ($serializer eq 'MessagePack') {
+        if ($serializer eq 'MessagePack') {
+            require Data::MessagePack;
             $serialize   = \&_mp_serialize;
             $deserialize = \&_mp_deserialize;
+        }
+        elsif ($serializer eq 'Storable') {
+            require Storable;
+            $serialize   = _mk_serialize   \&Storable::nfreeze;
+            $deserialize = _mk_deserialize \&Storable::thaw;
         }
     }
     $redis = Redis->new(
@@ -82,7 +88,7 @@ sub get {
 
     my $data = $self->{redis}->get($key);
 
-    defined $data ? $self->_do_deserialize($data) : $data;
+    defined $data ? $self->{deserialize}->($data) : $data;
 }
 
 sub set {
@@ -91,7 +97,7 @@ sub set {
     $expire ||= $self->{default_expires_in};
 
     my $redis = $self->{redis};
-    $redis->set($key, $self->_do_serialize($value), sub {});
+    $redis->set($key, $self->{serialize}->($value), sub {});
     $redis->expire($key, $expire, sub {});
 
     $redis->wait_all_responses unless $self->{nowait};
