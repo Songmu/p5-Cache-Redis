@@ -146,7 +146,7 @@ Cache::Redis - Redis client specialized for cache
 
 =head1 DESCRIPTION
 
-This module is for cache of Redis backend having L<<Cache::Cache>> like interface.
+This module is for cache of Redis backend having L<Cache::Cache> like interface.
 
 =head1 INTERFACE
 
