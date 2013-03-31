@@ -10,9 +10,10 @@ use Cache::Redis;
 my $redis = Test::RedisServer->new;
 my $socket = $redis->conf->{unixsocket};
 
-my $cache = new_ok 'Cache::Redis', [
+my $cache = Cache::Redis->new(
     sock => $socket,
-];
+);
+isa_ok $cache, 'Cache::Redis';
 
 subtest serialize => sub {
     my $org = 'hoge';
