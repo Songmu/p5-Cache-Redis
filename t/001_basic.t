@@ -3,6 +3,7 @@ use strict;
 use utf8;
 use Test::More;
 
+use Time::HiRes qw/sleep/;
 use Test::RedisServer;
 use Cache::Redis;
 
@@ -47,6 +48,15 @@ subtest object => sub {
     ok !$cache->get('hoge');
 };
 
+subtest blessed => sub {
+    local $@;
+    my $obj = bless {}, 'Blah';
+    eval {
+        $cache->set('hoge', $obj);
+    };
+    ok $@;
+};
+
 subtest get_or_set => sub {
     my $key = 'kkk';
 
@@ -60,7 +70,7 @@ subtest expire => sub {
     $cache->set('hoge',  'fuga', 1);
     is $cache->get('hoge'), 'fuga';
 
-    sleep 2;
+    sleep 1.01;
     ok !$cache->get('hoge');
 };
 
