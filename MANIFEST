@@ -9,7 +9,7 @@ README
 t/000_load.t
 t/001_basic.t
 t/002_namespace.t
-t/003_storable.t
+t/003_messagepack.t
 xt/perlcritic.t
 xt/pod.t
 xt/podcoverage.t

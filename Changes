@@ -1,4 +1,7 @@
 Revision history for Perl extension Cache::Redis
 
+0.02    Mon Apr  1 04:46:01 2013
+    - default serializer turn to Storable **incopatible change**
+
 0.01    Sun Mar 31 16:34:33 2013
     - original version
