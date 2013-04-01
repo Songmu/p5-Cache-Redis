@@ -73,7 +73,7 @@ sub new {
     my $server = delete $args->{server};
     if ($server) {
         my ($srv, $port) = split /:/, $server;
-        $args->{server} = $srv;
+        $args->{host} = $srv;
         $args->{port}   = $port if defined $port;
     }
     $redis = Redis::hiredis->new(
