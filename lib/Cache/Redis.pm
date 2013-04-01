@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 our $VERSION = '0.02';
-use Redis;
+use RedisDB;
 
 my $_mp;
 sub _mp {
@@ -67,8 +67,16 @@ sub new {
             $deserialize = \&_mp_deserialize;
         }
     }
-    $redis = Redis->new(
-        encoding => undef,
+
+    my $sock = delete $args->{sock};
+    $args->{path} = $sock if $sock;
+    my $server = delete $args->{server};
+    if ($server) {
+        my ($srv, $port) = split /:/, $server;
+        $args->{server} = $srv;
+        $args->{port}   = $port if defined $port;
+    }
+    $redis = RedisDB->new(
         %$args
     );
 
@@ -86,7 +94,7 @@ sub get {
     my ($self, $key) = @_;
     $key = $self->{namespace} . $key;
 
-    my $data = $self->{redis}->get($key);
+    my $data = $self->{redis}->execute('get', $key);
 
     defined $data ? $self->{deserialize}->($data) : $data;
 }
@@ -97,10 +105,8 @@ sub set {
     $expire ||= $self->{default_expires_in};
 
     my $redis = $self->{redis};
-    $redis->set($key, $self->{serialize}->($value), sub {});
-    $redis->expire($key, $expire, sub {});
-
-    $redis->wait_all_responses unless $self->{nowait};
+    $redis->execute('set', $key, $self->{serialize}->($value));
+    $redis->execute('expire', $key, $expire);
 }
 
 sub get_or_set {
@@ -117,7 +123,7 @@ sub get_or_set {
 sub remove {
     my ($self, $key) = @_;
 
-    $self->{redis}->del($key);
+    $self->{redis}->execute('del', $key);
 }
 
 sub nowait_push {
