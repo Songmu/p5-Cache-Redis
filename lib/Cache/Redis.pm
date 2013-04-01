@@ -97,8 +97,7 @@ sub set {
     $expire ||= $self->{default_expires_in};
 
     my $redis = $self->{redis};
-    $redis->set($key, $self->{serialize}->($value), sub {});
-    $redis->expire($key, $expire, sub {});
+    $redis->setex($key, $expire, $self->{serialize}->($value), sub {});
 
     $redis->wait_all_responses unless $self->{nowait};
 }
