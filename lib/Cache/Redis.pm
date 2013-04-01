@@ -47,7 +47,7 @@ sub new {
     my $default_expires_in = delete $args->{default_expires_in} || 60*60*24 * 30;
     my $namespace          = delete $args->{namespace}          || '';
     my $nowait             = delete $args->{nowait}             || 0;
-    my $serializer         = delete $args->{serializer}         || 'MessagePack';
+    my $serializer         = delete $args->{serializer}         || 'Storable';
 
     my ($serialize, $deserialize, $redis);
     my $serialize_methods = delete $args->{serialize_methods};
@@ -56,15 +56,15 @@ sub new {
         $deserialize = _mk_deserialize $serialize_methods->[1];
     }
     elsif ($serializer) {
-        if ($serializer eq 'MessagePack') {
-            require Data::MessagePack;
-            $serialize   = \&_mp_serialize;
-            $deserialize = \&_mp_deserialize;
-        }
-        elsif ($serializer eq 'Storable') {
+        if ($serializer eq 'Storable') {
             require Storable;
             $serialize   = _mk_serialize   \&Storable::nfreeze;
             $deserialize = _mk_deserialize \&Storable::thaw;
+        }
+        elsif ($serializer eq 'MessagePack') {
+            require Data::MessagePack;
+            $serialize   = \&_mp_serialize;
+            $deserialize = \&_mp_deserialize;
         }
     }
     $redis = Redis->new(
@@ -148,6 +148,8 @@ Cache::Redis - Redis client specialized for cache
 
 This module is for cache of Redis backend having L<Cache::Cache> like interface.
 
+B<THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE>.
+
 =head1 INTERFACE
 
 =head2 Methods
@@ -173,7 +175,7 @@ If enabled, when you call a method that only returns its success status (like "s
 it sends the request to the server and returns immediately, not waiting the reply. This avoids the
 round-trip latency at a cost of uncertain command outcome.
 
-=item C<serializer ('MessagePack')>
+=item C<serializer ('Storable')>
 
 Serializer. 'MessagePack' and 'Storable' are usable. if `serialize_methods` option
 is specified, this option is ignored.
@@ -210,18 +212,6 @@ run I<$code> and cache I<$expiration> seconds and return the value.
 =head3 C<< $obj->nowait_push >>
 
 Wait all response from redis. This is intended for C<< $obj->nowait >>.
-
-=head1 FAQ
-
-=head2 How to set binary or blessed object to cache?
-
-Default serializer using L<Data::MessagePack> can't handle binary
-and blessed objects (for performance).
-
-If you want to set them. Most easiest way is to set constructor option
-`serializer` to 'Storable'.
-
-Or you can set constructor option `serialize_methods` for more frequency handling.
 
 =head1 DEPENDENCIES
 

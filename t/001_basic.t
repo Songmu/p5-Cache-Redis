@@ -15,13 +15,6 @@ my $cache = Cache::Redis->new(
 );
 isa_ok $cache, 'Cache::Redis';
 
-subtest serialize => sub {
-    my $org = 'hoge';
-    my $packed   = Cache::Redis::_mp_serialize($org);
-    my $unpacked = Cache::Redis::_mp_deserialize($packed);
-    is $unpacked, $org;
-};
-
 subtest basic => sub {
     ok !$cache->get('hoge');
     $cache->set('hoge',  'fuga');
@@ -50,12 +43,13 @@ subtest object => sub {
 };
 
 subtest blessed => sub {
-    local $@;
-    my $obj = bless {}, 'Blah';
-    eval {
-        $cache->set('hoge', $obj);
-    };
-    ok $@;
+    $cache->set('hoge', bless({}, 'Blah'));
+
+    my $obj = $cache->get('hoge');
+    isa_ok $obj, 'Blah';
+
+    ok $cache->remove('hoge');
+    ok !$cache->get('hoge');
 };
 
 subtest get_or_set => sub {

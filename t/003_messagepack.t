@@ -3,7 +3,6 @@ use strict;
 use utf8;
 use Test::More;
 
-use Time::HiRes qw/sleep/;
 use Test::RedisServer;
 use Cache::Redis;
 
@@ -12,9 +11,16 @@ my $socket = $redis->conf->{unixsocket};
 
 my $cache = Cache::Redis->new(
     sock       => $socket,
-    serializer => 'Storable',
+    serializer => 'MessagePack',
 );
 isa_ok $cache, 'Cache::Redis';
+
+subtest serialize => sub {
+    my $org = 'hoge';
+    my $packed   = Cache::Redis::_mp_serialize($org);
+    my $unpacked = Cache::Redis::_mp_deserialize($packed);
+    is $unpacked, $org;
+};
 
 subtest basic => sub {
     ok !$cache->get('hoge');
@@ -44,13 +50,12 @@ subtest object => sub {
 };
 
 subtest blessed => sub {
-    $cache->set('hoge', bless({}, 'Blah'));
-
-    my $obj = $cache->get('hoge');
-    isa_ok $obj, 'Blah';
-
-    ok $cache->remove('hoge');
-    ok !$cache->get('hoge');
+    local $@;
+    my $obj = bless {}, 'Blah';
+    eval {
+        $cache->set('hoge', $obj);
+    };
+    ok $@;
 };
 
 subtest get_or_set => sub {
