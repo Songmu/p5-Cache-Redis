@@ -105,8 +105,7 @@ sub set {
     $expire ||= $self->{default_expires_in};
 
     my $redis = $self->{redis};
-    $redis->execute('set', $key, $self->{serialize}->($value));
-    $redis->execute('expire', $key, $expire);
+    $redis->execute('setex', $key, $expire, $self->{serialize}->($value));
 }
 
 sub get_or_set {
