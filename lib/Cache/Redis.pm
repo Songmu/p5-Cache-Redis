@@ -6,6 +6,10 @@ use warnings;
 our $VERSION = '0.02';
 use Redis;
 
+sub F_STORABLE() { 0b00000001 }
+sub F_COMPRESS() { 0b00000010 }
+sub F_UTF8()     { 0b00000100 }
+
 my $_mp;
 sub _mp {
     $_mp ||= Data::MessagePack->new->utf8;
@@ -86,9 +90,18 @@ sub get {
     my ($self, $key) = @_;
     $key = $self->{namespace} . $key;
 
-    my $data = $self->{redis}->get($key);
+    my ($data, $flag) = $self->{redis}->lrange($key, 0, 1);
 
-    defined $data ? $self->{deserialize}->($data) : $data;
+    if ($flag) {
+        if ($flag & F_STORABLE) {
+            $data = Storable::thaw($data);
+        }
+        elsif ($flag & F_UTF8) {
+            utf8::decode($data);
+        }
+    }
+
+    $data;
 }
 
 sub set {
@@ -97,7 +110,27 @@ sub set {
     $expire ||= $self->{default_expires_in};
 
     my $redis = $self->{redis};
-    $redis->setex($key, $expire, $self->{serialize}->($value), sub {});
+
+    my $flag = 0;
+    if (ref $value) {
+        $flag |= F_STORABLE;
+        $value = Storable::nfreeze($value);
+    }
+    elsif (utf8::is_utf8($value)) {
+        utf8::encode($value);
+        $flag |= F_UTF8;
+    }
+
+    if ($redis->llen($key) == 2) {
+        $redis->lset($key, 0, $value, sub {});
+        $redis->lset($key, 1, $flag,  sub {});
+    }
+    else {
+        # $redis->del($key);
+        $redis->rpush($key, $value);
+        $redis->rpush($key, $flag);
+    }
+    $redis->expire($key, $expire, sub {});
 
     $redis->wait_all_responses unless $self->{nowait};
 }
