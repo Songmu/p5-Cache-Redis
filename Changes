@@ -2,6 +2,9 @@ Revision history for Perl extension Cache::Redis
 
 {{$NEXT}}
 
+0.04 2013-05-07T10:31:33Z
+    - fixup packaging and dependencies.
+
 0.03 2013-05-07T06:44:39Z
     - Fix remove method bug. (didn't care namespace)
     - remove method returns removed value.
