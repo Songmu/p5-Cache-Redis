@@ -29,3 +29,10 @@ Build
 _build/*
 tmp/
 README
+/Cache-Redis-*
+/.build
+/_build_params
+/Build
+!Build/
+!META.json
+!LICENSE

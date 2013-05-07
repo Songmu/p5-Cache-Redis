@@ -1,5 +1,7 @@
 Revision history for Perl extension Cache::Redis
 
+{{$NEXT}}
+
 0.02    Mon Apr  1 04:46:01 2013
     - default serializer turn to Storable **incompatible change**
 
