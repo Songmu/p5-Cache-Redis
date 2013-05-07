@@ -26,4 +26,8 @@ $cache2->set(hoge => 2);
 is $cache2->get('hoge'), 2;
 is $cache1->get('hoge'), 1;
 
+
+is $cache1->remove('hoge'), 1;
+ok !$cache1->get('hoge');
+
 done_testing;

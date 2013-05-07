@@ -3,7 +3,7 @@ use 5.008_001;
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 use Redis;
 
 my $_mp;
@@ -116,7 +116,11 @@ sub get_or_set {
 sub remove {
     my ($self, $key) = @_;
 
+    my $data = $self->get($key);
+    $key = $self->{namespace} . $key;
     $self->{redis}->del($key);
+
+    $data;
 }
 
 sub nowait_push {
