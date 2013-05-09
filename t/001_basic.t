@@ -7,7 +7,8 @@ use Time::HiRes qw/sleep/;
 use Test::RedisServer;
 use Cache::Redis;
 
-my $redis = Test::RedisServer->new;
+my $redis = eval { Test::RedisServer->new }
+    or plan skip_all => 'redis-server is required in PATH to run this test';
 my $socket = $redis->conf->{unixsocket};
 
 my $cache = Cache::Redis->new(
