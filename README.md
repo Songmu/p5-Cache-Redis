@@ -53,7 +53,7 @@ the behaviour of the cache (defaults in parentheses):
 - `serialize_methods (undef)`
 
     The value is a reference to an array holding two code references for serialization and
-    deserialization routines respectively.
+    de-serialization routines respectively.
 
 - server (undef)
 
@@ -79,7 +79,7 @@ run _$code_ and cache _$expiration_ seconds and return the value.
 
 ### `$obj->nowait_push`
 
-Wait all response from redis. This is intended for `$obj->nowait`.
+Wait all response from Redis. This is intended for `$obj->nowait`.
 
 # DEPENDENCIES
 

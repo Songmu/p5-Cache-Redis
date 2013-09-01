@@ -191,7 +191,7 @@ is specified, this option is ignored.
 =item C<serialize_methods (undef)>
 
 The value is a reference to an array holding two code references for serialization and
-deserialization routines respectively.
+de-serialization routines respectively.
 
 =item server (undef)
 
@@ -219,7 +219,7 @@ run I<$code> and cache I<$expiration> seconds and return the value.
 
 =head3 C<< $obj->nowait_push >>
 
-Wait all response from redis. This is intended for C<< $obj->nowait >>.
+Wait all response from Redis. This is intended for C<< $obj->nowait >>.
 
 =head1 DEPENDENCIES
 
