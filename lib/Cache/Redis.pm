@@ -66,6 +66,11 @@ sub new {
             $serialize   = \&_mp_serialize;
             $deserialize = \&_mp_deserialize;
         }
+        elsif ($serializer eq 'JSON') {
+            require JSON::XS;
+            $serialize   = _mk_serialize   \&JSON::XS::encode_json;
+            $deserialize = _mk_deserialize \&JSON::XS::decode_json;
+        }
     }
     $redis = Redis->new(
         encoding => undef,
