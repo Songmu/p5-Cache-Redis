@@ -4,7 +4,8 @@ use strict;
 use warnings;
 
 our $VERSION = '0.06';
-use Redis;
+
+use Module::Load;
 
 my $_mp;
 sub _mp {
@@ -47,32 +48,38 @@ sub new {
     my $default_expires_in = delete $args->{default_expires_in} || 60*60*24 * 30;
     my $namespace          = delete $args->{namespace}          || '';
     my $nowait             = delete $args->{nowait}             || 0;
-    my $serializer         = delete $args->{serializer}         || 'Storable';
+    my $redis_class        = delete $args->{redis_class}        || 'Redis';
+
+    my $serializer        = delete $args->{serializer};
+    my $serialize_methods = delete $args->{serialize_methods};
+    die '`serializer` and `serialize_methods` is exclusive option' if $serializer && $serialize_methods;
+    $serializer ||= 'Storable' unless $serialize_methods;
 
     my ($serialize, $deserialize, $redis);
-    my $serialize_methods = delete $args->{serialize_methods};
+    if ($serializer) {
+        if ($serializer eq 'Storable') {
+            require Storable;
+            $serialize_methods = [\&Storable::nfreeze, \&Storable::thaw];
+        }
+        elsif ($serializer eq 'JSON') {
+            require JSON::XS;
+            $serialize_methods = [\&JSON::XS::encode_json, \&JSON::XS::decode_json];
+        }
+    }
+
     if ($serialize_methods) {
         $serialize   = _mk_serialize   $serialize_methods->[0];
         $deserialize = _mk_deserialize $serialize_methods->[1];
     }
-    elsif ($serializer) {
-        if ($serializer eq 'Storable') {
-            require Storable;
-            $serialize   = _mk_serialize   \&Storable::nfreeze;
-            $deserialize = _mk_deserialize \&Storable::thaw;
-        }
-        elsif ($serializer eq 'MessagePack') {
-            require Data::MessagePack;
-            $serialize   = \&_mp_serialize;
-            $deserialize = \&_mp_deserialize;
-        }
-        elsif ($serializer eq 'JSON') {
-            require JSON::XS;
-            $serialize   = _mk_serialize   \&JSON::XS::encode_json;
-            $deserialize = _mk_deserialize \&JSON::XS::decode_json;
-        }
+    elsif ($serializer eq 'MessagePack') {
+        require Data::MessagePack;
+        $serialize   = \&_mp_serialize;
+        $deserialize = \&_mp_deserialize;
     }
-    $redis = Redis->new(
+    die 'Serializer is not found' if !$serialize || !$deserialize;
+
+    load $redis_class;
+    $redis = $redis_class->new(
         encoding => undef,
         %$args
     );
