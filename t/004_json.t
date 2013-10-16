@@ -11,16 +11,9 @@ my $socket = $redis->conf->{unixsocket};
 
 my $cache = Cache::Redis->new(
     sock       => $socket,
-    serializer => 'MessagePack',
+    serializer => 'JSON',
 );
 isa_ok $cache, 'Cache::Redis';
-
-subtest serialize => sub {
-    my $org = 'hoge';
-    my $packed   = Cache::Redis::_mp_serialize($org);
-    my $unpacked = Cache::Redis::_mp_deserialize($packed);
-    is $unpacked, $org;
-};
 
 subtest basic => sub {
     ok !$cache->get('hoge');

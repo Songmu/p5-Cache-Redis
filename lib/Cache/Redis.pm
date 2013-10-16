@@ -3,8 +3,9 @@ use 5.008_001;
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
-use Redis::hiredis;
+our $VERSION = '0.07';
+
+use Module::Load;
 
 my $_mp;
 sub _mp {
@@ -47,47 +48,68 @@ sub new {
     my $default_expires_in = delete $args->{default_expires_in} || 60*60*24 * 30;
     my $namespace          = delete $args->{namespace}          || '';
     my $nowait             = delete $args->{nowait}             || 0;
-    my $serializer         = delete $args->{serializer}         || 'Storable';
+    my $redis_class        = delete $args->{redis_class}        || 'Redis';
+
+    my $serializer        = delete $args->{serializer};
+    my $serialize_methods = delete $args->{serialize_methods};
+    die '`serializer` and `serialize_methods` is exclusive option' if $serializer && $serialize_methods;
+    $serializer ||= 'Storable' unless $serialize_methods;
 
     my ($serialize, $deserialize, $redis);
-    my $serialize_methods = delete $args->{serialize_methods};
+    if ($serializer) {
+        if ($serializer eq 'Storable') {
+            require Storable;
+            $serialize_methods = [\&Storable::nfreeze, \&Storable::thaw];
+        }
+        elsif ($serializer eq 'JSON') {
+            require JSON::XS;
+            $serialize_methods = [\&JSON::XS::encode_json, \&JSON::XS::decode_json];
+        }
+    }
+
     if ($serialize_methods) {
         $serialize   = _mk_serialize   $serialize_methods->[0];
         $deserialize = _mk_deserialize $serialize_methods->[1];
     }
-    elsif ($serializer) {
-        if ($serializer eq 'Storable') {
-            require Storable;
-            $serialize   = _mk_serialize   \&Storable::nfreeze;
-            $deserialize = _mk_deserialize \&Storable::thaw;
-        }
-        elsif ($serializer eq 'MessagePack') {
-            require Data::MessagePack;
-            $serialize   = \&_mp_serialize;
-            $deserialize = \&_mp_deserialize;
-        }
+    elsif ($serializer eq 'MessagePack') {
+        require Data::MessagePack;
+        $serialize   = \&_mp_serialize;
+        $deserialize = \&_mp_deserialize;
     }
+    die 'Serializer is not found' if !$serialize || !$deserialize;
 
-    my $sock = delete $args->{sock};
-    $args->{path} = $sock if $sock;
-    my $server = delete $args->{server};
-    if ($server) {
-        my ($srv, $port) = split /:/, $server;
-        $args->{host} = $srv;
-        $args->{port}   = $port if defined $port;
+    load $redis_class;
+    # Redis::hiredis;
+    if ($redis_class ne 'Redis::hiredis') {
+        $redis = $redis_class->new(
+            encoding => undef,
+            %$args
+        );
     }
-    $redis = Redis::hiredis->new(
-        utf8 => 0,
-        %$args
-    );
+    else {
+        my $sock = delete $args->{sock};
+        $args->{path} = $sock if $sock;
+        my $server = delete $args->{server};
+        if ($server) {
+            my ($srv, $port) = split /:/, $server;
+            $args->{host} = $srv;
+            $args->{port}   = $port if defined $port;
+        }
+        $redis = $redis_class->new(
+            utf8 => 0,
+            %$args
+        );
+    }
 
     bless {
+        redis_class        => $redis_class,
         default_expires_in => $default_expires_in,
         serialize          => $serialize,
         deserialize        => $deserialize,
         redis              => $redis,
         namespace          => $namespace,
         nowait             => $nowait,
+        _async             => $redis_class ne 'Redis::hiredis' ? sub {} : undef,
     }, $class;
 }
 
@@ -106,7 +128,12 @@ sub set {
     $expire ||= $self->{default_expires_in};
 
     my $redis = $self->{redis};
-    $redis->setex($key, $expire, $self->{serialize}->($value));
+    $redis->setex($key, $expire, $self->{serialize}->($value), $self->_async);
+    $redis->wait_all_responses unless $self->{nowait};
+}
+
+sub _async {
+    shift->{_async} || ();
 }
 
 sub get_or_set {
@@ -123,7 +150,11 @@ sub get_or_set {
 sub remove {
     my ($self, $key) = @_;
 
+    my $data = $self->get($key);
+    $key = $self->{namespace} . $key;
     $self->{redis}->del($key);
+
+    $data;
 }
 
 sub nowait_push {
@@ -189,7 +220,7 @@ is specified, this option is ignored.
 =item C<serialize_methods (undef)>
 
 The value is a reference to an array holding two code references for serialization and
-deserialization routines respectively.
+de-serialization routines respectively.
 
 =item server (undef)
 
@@ -217,7 +248,7 @@ run I<$code> and cache I<$expiration> seconds and return the value.
 
 =head3 C<< $obj->nowait_push >>
 
-Wait all response from redis. This is intended for C<< $obj->nowait >>.
+Wait all response from Redis. This is intended for C<< $obj->nowait >>.
 
 =head1 DEPENDENCIES
 
