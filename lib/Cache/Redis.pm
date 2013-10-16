@@ -79,18 +79,37 @@ sub new {
     die 'Serializer is not found' if !$serialize || !$deserialize;
 
     load $redis_class;
-    $redis = $redis_class->new(
-        encoding => undef,
-        %$args
-    );
+    # Redis::hiredis;
+    if ($redis_class ne 'Redis::hiredis') {
+        $redis = $redis_class->new(
+            encoding => undef,
+            %$args
+        );
+    }
+    else {
+        my $sock = delete $args->{sock};
+        $args->{path} = $sock if $sock;
+        my $server = delete $args->{server};
+        if ($server) {
+            my ($srv, $port) = split /:/, $server;
+            $args->{host} = $srv;
+            $args->{port}   = $port if defined $port;
+        }
+        $redis = $redis_class->new(
+            utf8 => 0,
+            %$args
+        );
+    }
 
     bless {
+        redis_class        => $redis_class,
         default_expires_in => $default_expires_in,
         serialize          => $serialize,
         deserialize        => $deserialize,
         redis              => $redis,
         namespace          => $namespace,
         nowait             => $nowait,
+        _async             => $redis_class ne 'Redis::hiredis' ? sub {} : undef,
     }, $class;
 }
 
@@ -109,9 +128,12 @@ sub set {
     $expire ||= $self->{default_expires_in};
 
     my $redis = $self->{redis};
-    $redis->setex($key, $expire, $self->{serialize}->($value), sub {});
-
+    $redis->setex($key, $expire, $self->{serialize}->($value), $self->_async);
     $redis->wait_all_responses unless $self->{nowait};
+}
+
+sub _async {
+    shift->{_async} || ();
 }
 
 sub get_or_set {

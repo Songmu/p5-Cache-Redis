@@ -33,6 +33,11 @@ my $redis_client_fast = Cache::Redis->new(
     redis_class => 'Redis::Fast',
     nowait => 1,
 );
+my $redis_client_hiredis = Cache::Redis->new(
+    $redis->connect_info,
+    redis_class => 'Redis::hiredis',
+    nowait => 1,
+);
 
 my $results = timethese(0, {
     'memd'  => sub {
@@ -49,6 +54,11 @@ my $results = timethese(0, {
         $redis_client_fast->set('hoge', 'fuga');
         $redis_client_fast->get('hoge');
         $redis_client_fast->remove('hoge');
+    },
+    'redis_hiredis' => sub {
+        $redis_client_hiredis->set('hoge', 'fuga');
+        $redis_client_hiredis->get('hoge');
+        $redis_client_hiredis->remove('hoge');
     },
 });
 cmpthese( $results ) ;
