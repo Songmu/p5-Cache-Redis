@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/Songmu/p5-Cache-Redis.png?branch=master)](https://travis-ci.org/Songmu/p5-Cache-Redis) [![Coverage Status](https://coveralls.io/repos/Songmu/p5-Cache-Redis/badge.png?branch=master)](https://coveralls.io/r/Songmu/p5-Cache-Redis?branch=master)
 # NAME
 
 Cache::Redis - Redis client specialized for cache

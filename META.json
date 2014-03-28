@@ -4,7 +4,7 @@
       "Masayuki Matsuki <y.songmu@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v0.11.0, CPAN::Meta::Converter version 2.132830",
+   "generated_by" : "Minilla/v0.11.0, CPAN::Meta::Converter version 2.132510",
    "license" : [
       "perl_5"
    ],
@@ -67,7 +67,8 @@
       },
       "homepage" : "https://github.com/Songmu/p5-Cache-Redis",
       "repository" : {
-         "url" : "https://github.com/Songmu/p5-Cache-Redis.git",
+         "type" : "git",
+         "url" : "git://github.com/Songmu/p5-Cache-Redis.git",
          "web" : "https://github.com/Songmu/p5-Cache-Redis"
       }
    },
