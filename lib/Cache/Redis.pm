@@ -115,8 +115,9 @@ sub get_multi {
     my $i = 0;
     my $ret = {};
     for my $key ( @keys ) {
-        next unless defined $data[$i];
-        $ret->{$key} = $self->{deserialize}->($data[$i]);
+        if ( defined $data[$i] ) {
+            $ret->{$key} = $self->{deserialize}->($data[$i]);
+        }
         $i++;
     }
 
