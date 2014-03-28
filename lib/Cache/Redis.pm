@@ -252,7 +252,7 @@ Get a stuff from cache.
 =head3 C<< my $res = $obj->get_multi(@keys) >>
 
 Get multiple stuffs as hash reference from cache. C<< @keys >> should be array.
-A key is not stored on cache dont be contain C<< $res >>.
+A key is not stored on cache don't be contain C<< $res >>.
 
 =head3 C<< $obj->remove($key) >>
 
