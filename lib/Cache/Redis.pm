@@ -50,12 +50,13 @@ sub new {
     my $nowait             = delete $args->{nowait}             || 0;
     my $redis_class        = delete $args->{redis_class}        || 'Redis';
 
+    my $redis             = delete $args->{redis};
     my $serializer        = delete $args->{serializer};
     my $serialize_methods = delete $args->{serialize_methods};
     die '`serializer` and `serialize_methods` is exclusive option' if $serializer && $serialize_methods;
     $serializer ||= 'Storable' unless $serialize_methods;
 
-    my ($serialize, $deserialize, $redis);
+    my ($serialize, $deserialize);
     if ($serializer) {
         if ($serializer eq 'Storable') {
             require Storable;
@@ -78,11 +79,13 @@ sub new {
     }
     die 'Serializer is not found' if !$serialize || !$deserialize;
 
-    load $redis_class;
-    $redis = $redis_class->new(
-        encoding => undef,
-        %$args
-    );
+    unless ( $redis ) {
+        load $redis_class;
+        $redis = $redis_class->new(
+            encoding => undef,
+            %$args
+        );
+    }
 
     bless {
         default_expires_in => $default_expires_in,
@@ -205,6 +208,14 @@ Create a new cache object. Various options may be set in C<%options>, which affe
 the behaviour of the cache (defaults in parentheses):
 
 =over
+
+=item C<redis>
+
+Instance of Redis class are used as backend. If this is not passed, L<Cache::Redis> load from C<redis_class> automatically.
+
+=item C<redis_class ('Redis')>
+
+The class for backend.
 
 =item C<default_expires_in (60*60*24 * 30)>
 

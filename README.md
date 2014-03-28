@@ -32,6 +32,14 @@ __THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE__.
 Create a new cache object. Various options may be set in `%options`, which affect
 the behaviour of the cache (defaults in parentheses):
 
+- `redis`
+
+    Instance of Redis class are used as backend. If this is not passed, [Cache::Redis](http://search.cpan.org/perldoc?Cache::Redis) load from `redis_class` automatically.
+
+- `redis_class ('Redis')`
+
+    The class for backend.
+
 - `default_expires_in (60*60*24 * 30)`
 
     The default expiration seconds for objects place in the cache.
