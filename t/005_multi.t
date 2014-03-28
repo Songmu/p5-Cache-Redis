@@ -51,6 +51,13 @@ for my $redis_class (qw/Redis Redis::Fast/) {
         }
     };
 
+    subtest 'get_multi with not exist key' => sub {
+        $cache->set_multi([ 'foo', 1], [ 'bar', 2 ]);
+        is_deeply $cache->get_multi(qw(foo bar)), { foo => 1, bar => 2 };
+        $cache->remove('foo');
+        is_deeply $cache->get_multi(qw(foo bar)), { bar => 2 };
+    };
+
     subtest object => sub {
         $cache->set_multi([ 'hoge', { data => 'あ' } ]);
         is_deeply $cache->get_multi('hoge'), { hoge => { data => 'あ' } };
