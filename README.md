@@ -64,9 +64,18 @@ the behaviour of the cache (defaults in parentheses):
 
 Set a stuff to cache.
 
+### `$obj->set_multi([$key, $value, $expire], [$key, $value])`
+
+Set multiple stuffs to cache. stuffs is array reference.
+
 ### `my $stuff = $obj->get($key)`
 
 Get a stuff from cache.
+
+### `my $res = $obj->get_multi(@keys)`
+
+Get multiple stuffs as hash reference from cache. `@keys` should be array.
+A key is not stored on cache don't be contain `$res`.
 
 ### `$obj->remove($key)`
 
