@@ -1,6 +1,7 @@
 use strict;
 use utf8;
 use Test::More;
+use Test::Requires 'Data::MessagePack';
 
 use Test::RedisServer;
 use Cache::Redis;

@@ -6,7 +6,6 @@ recommends 'Redis::Fast';
 recommends 'Data::MessagePack', '0.36';
 recommends 'JSON::XS';
 
-
 on configure => sub {
     requires 'CPAN::Meta';
     requires 'CPAN::Meta::Prereqs';
@@ -15,5 +14,6 @@ on configure => sub {
 
 on test => sub {
     requires 'Test::More', '0.98';
+    requires 'Test::Requires';
     requires 'Test::RedisServer';
 }
