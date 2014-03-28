@@ -103,15 +103,45 @@ sub get {
     defined $data ? $self->{deserialize}->($data) : $data;
 }
 
+sub get_multi {
+    my ($self, @keys) = @_;
+    @keys = map { $self->{namespace} . $_ } @keys;
+
+    my @data = $self->{redis}->mget(@keys);
+
+    my $i = 0;
+    my $ret = {};
+    for my $key ( @keys ) {
+        next unless defined $data[$i];
+        $ret->{$key} = $self->{deserialize}->($data[$i]);
+        $i++;
+    }
+
+    $ret;
+}
+
 sub set {
+    my ($self, $key, $value, $expire) = @_;
+
+    $self->_set($key, $value, $expire);
+    $self->{redis}->wait_all_responses unless $self->{nowait};
+}
+
+sub set_multi {
+    my ($self, @items) = @_;
+
+    for my $item ( @items ) {
+        $self->_set(@$item);
+    }
+    $self->{redis}->wait_all_responses unless $self->{nowait};
+}
+
+sub _set {
     my ($self, $key, $value, $expire) = @_;
     $key = $self->{namespace} . $key;
     $expire ||= $self->{default_expires_in};
 
-    my $redis = $self->{redis};
-    $redis->setex($key, $expire, $self->{serialize}->($value), sub {});
-
-    $redis->wait_all_responses unless $self->{nowait};
+    $self->{redis}->setex($key, $expire, $self->{serialize}->($value), sub {});
 }
 
 sub get_or_set {
@@ -211,9 +241,18 @@ all other L<Redis> constructor options to C<< Cache::Cache->new >> method.
 
 Set a stuff to cache.
 
+=head3 C<< $obj->set_multi([$key, $value, $expire], [$key, $value]) >>
+
+Set multiple stuffs to cache. stuffs is array reference.
+
 =head3 C<< my $stuff = $obj->get($key) >>
 
 Get a stuff from cache.
+
+=head3 C<< my $res = $obj->get_multi(@keys) >>
+
+Get multiple stuffs as hash reference from cache. C<< @keys >> should be array.
+A key is not stored on cache dont be contain C<< $res >>.
 
 =head3 C<< $obj->remove($key) >>
 
