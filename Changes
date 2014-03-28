@@ -2,6 +2,9 @@ Revision history for Perl extension Cache::Redis
 
 {{$NEXT}}
 
+0.09 2014-03-28T06:39:09Z
+    - Add redis option (soh335++)
+
 0.08 2014-03-28T03:46:20Z
     - Add get_multi, set_multi method (soh335++)
 
