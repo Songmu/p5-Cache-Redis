@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Songmu/p5-Cache-Redis.png?branch=master)](https://travis-ci.org/Songmu/p5-Cache-Redis) [![Coverage Status](https://coveralls.io/repos/Songmu/p5-Cache-Redis/badge.png?branch=master)](https://coveralls.io/r/Songmu/p5-Cache-Redis?branch=master)
+[![Build Status](https://travis-ci.org/Songmu/p5-Cache-Redis.svg?branch=master)](https://travis-ci.org/Songmu/p5-Cache-Redis) [![Coverage Status](https://img.shields.io/coveralls/Songmu/p5-Cache-Redis/master.svg)](https://coveralls.io/r/Songmu/p5-Cache-Redis?branch=master)
 # NAME
 
 Cache::Redis - Redis client specialized for cache
@@ -15,13 +15,11 @@ Cache::Redis - Redis client specialized for cache
     my $val = $cache->get('key');
     $cache->remove('key');
 
-
-
 # DESCRIPTION
 
-This module is for cache of Redis backend having [Cache::Cache](http://search.cpan.org/perldoc?Cache::Cache) like interface.
+This module is for cache of Redis backend having [Cache::Cache](https://metacpan.org/pod/Cache::Cache) like interface.
 
-__THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE__.
+**THIS IS A DEVELOPMENT RELEASE. API MAY CHANGE WITHOUT NOTICE**.
 
 # INTERFACE
 
@@ -34,7 +32,7 @@ the behaviour of the cache (defaults in parentheses):
 
 - `redis`
 
-    Instance of Redis class are used as backend. If this is not passed, [Cache::Redis](http://search.cpan.org/perldoc?Cache::Redis) load from `redis_class` automatically.
+    Instance of Redis class are used as backend. If this is not passed, [Cache::Redis](https://metacpan.org/pod/Cache::Redis) load from `redis_class` automatically.
 
 - `redis_class ('Redis')`
 
@@ -67,7 +65,7 @@ the behaviour of the cache (defaults in parentheses):
 - server (undef)
 
     Redis server information. You can use \`sock\` option instead of this and can specify
-    all other [Redis](http://search.cpan.org/perldoc?Redis) constructor options to `Cache::Cache->new` method.
+    all other [Redis](https://metacpan.org/pod/Redis) constructor options to `Cache::Cache->new` method.
 
 ### `$obj->set($key, $value, $expire)`
 
@@ -111,7 +109,7 @@ to cpan-RT.
 
 # SEE ALSO
 
-[perl](http://search.cpan.org/perldoc?perl)
+[perl](https://metacpan.org/pod/perl)
 
 # AUTHOR
 
