@@ -2,6 +2,10 @@ Revision history for Perl extension Cache::Redis
 
 {{$NEXT}}
 
+0.11 2015-04-15T03:47:42Z
+    - update packaging
+    - refactor tests
+
 0.10 2014-03-28T08:05:19Z
     - Fix bug in get_multi
 
