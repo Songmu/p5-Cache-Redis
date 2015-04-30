@@ -134,7 +134,8 @@ sub set {
       die 'set() requires if nowait is set, you must provide a callback coderef';
     }
 
-    my $response = $self->_set($key, $value, $expire);
+    my $response = $self->_set($key, $value, $expire, $callback);
+
     # return now as the callabck will be called when it's done processing
     return if ($self->{nowait});
     $self->{redis}->wait_all_responses;
