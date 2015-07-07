@@ -129,11 +129,6 @@ sub set {
 
     die 'set() requires key and value arguments' unless $key && $value;
 
-    if ($self->{nowait} && (!$callback || ($callback && ref $callback ne 'CODE')))
-    {
-      die 'set() requires if nowait is set, you must provide a callback coderef';
-    }
-
     my $response = $self->_set($key, $value, $expire, $callback);
 
     # return now as the callabck will be called when it's done processing
