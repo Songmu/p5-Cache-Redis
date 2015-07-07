@@ -125,10 +125,21 @@ sub get_multi {
 }
 
 sub set {
-    my ($self, $key, $value, $expire) = @_;
+    my ($self, $key, $value, $expire, $callback) = @_;
 
-    $self->_set($key, $value, $expire);
-    $self->{redis}->wait_all_responses unless $self->{nowait};
+    die 'set() requires key and value arguments' unless $key && $value;
+
+    if ($self->{nowait} && (!$callback || ($callback && ref $callback ne 'CODE')))
+    {
+      die 'set() requires if nowait is set, you must provide a callback coderef';
+    }
+
+    my $response = $self->_set($key, $value, $expire, $callback);
+
+    # return now as the callabck will be called when it's done processing
+    return if ($self->{nowait});
+    $self->{redis}->wait_all_responses;
+    return $response;
 }
 
 sub set_multi {
@@ -141,11 +152,16 @@ sub set_multi {
 }
 
 sub _set {
-    my ($self, $key, $value, $expire) = @_;
+    my ($self, $key, $value, $expire, $callback) = @_;
     $key = $self->{namespace} . $key;
     $expire ||= $self->{default_expires_in};
 
-    $self->{redis}->setex($key, $expire, $self->{serialize}->($value), sub {});
+    if ($self->{nowait} && $callback) {
+      $self->{redis}->setex($key, $expire, $self->{serialize}->($value), $callback);
+    }
+    else {
+      $self->{redis}->setex($key, $expire, $self->{serialize}->($value));
+    }
 }
 
 sub get_or_set {
