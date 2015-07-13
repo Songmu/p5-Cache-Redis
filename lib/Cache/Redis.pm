@@ -127,7 +127,7 @@ sub get_multi {
 sub set {
     my ($self, $key, $value, $expire, $callback) = @_;
 
-    die 'set() requires key and value arguments' unless $key && $value;
+    die 'set() requires key and value arguments' if scalar(@_) < 3;
 
     my $response = $self->_set($key, $value, $expire, $callback);
 
