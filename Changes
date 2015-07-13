@@ -2,6 +2,9 @@ Revision history for Perl extension Cache::Redis
 
 {{$NEXT}}
 
+0.13 2015-07-13T10:08:42Z
+    - fix argument check in `set()`
+
 0.12 2015-07-07T12:54:14Z
     - update set to return redis response messages (dnmfarrell++)
     - `set` accepts callback (dnmfarrell++)
